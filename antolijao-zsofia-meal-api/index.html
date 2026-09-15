@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USC Canteen Food Menu</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 40px 20px;
+        background: #f4f6f8;
+        color: #1f2933;
+      }
+
+      main {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 28px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+
+      input,
+      button {
+        padding: 10px 14px;
+        font-size: 1rem;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #d9dee3;
+        text-align: left;
+      }
+
+      th {
+        background: #e8edf2;
+      }
+
+      #status {
+        min-height: 1.5em;
+        color: #b42318;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <h1>USC Canteen Food Menu</h1>
+
+      <div class="controls">
+        <button id="loadMenuButton" type="button">Load All Menu Items</button>
+        <label for="foodId">Search by ID</label>
+        <input id="foodId" type="number" min="1" placeholder="Enter food ID" />
+        <button id="findMenuButton" type="button">Find Item</button>
+      </div>
+
+      <p id="status" role="status"></p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Food Item</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody id="filofoodTableBody"></tbody>
+      </table>
+    </main>
+
+    <script>
+      const tableBody = document.getElementById("filofoodTableBody");
+      const status = document.getElementById("status");
+
+      function displayDishes(dishes) {
+        tableBody.innerHTML = "";
+
+        dishes.forEach((dish) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${dish.id}</td><td>${dish.name}</td><td>${dish.price}</td>`;
+          tableBody.appendChild(row);
+        });
+      }
+
+      async function loadFilofood() {
+        status.textContent = "";
+
+        try {
+          const response = await fetch("/api/filofood");
+          if (!response.ok) throw new Error("cant load the menu woopsie!");
+          displayDishes(await response.json());
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      }
+
+      async function findFilofood() {
+        const id = document.getElementById("foodId").value;
+        status.textContent = "";
+
+        if (!id) {
+          status.textContent = "Please enter a food ID.";
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/filofood/${id}`);
+          if (!response.ok)
+            throw new Error(
+              "go to another restaurant! no food item found with that ID.",
+            );
+          displayDishes([await response.json()]);
+        } catch (error) {
+          tableBody.innerHTML = "";
+          status.textContent = error.message;
+        }
+      }
+
+      document
+        .getElementById("loadMenuButton")
+        .addEventListener("click", loadFilofood);
+      document
+        .getElementById("findMenuButton")
+        .addEventListener("click", findFilofood);
+    </script>
+  </body>
+</html>
